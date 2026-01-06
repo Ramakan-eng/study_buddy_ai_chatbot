@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+venv/
+.env
+
+# Django
+db.sqlite3
+
+# Vector DB / AI artifacts
+chroma_db/
+faiss.index
+metadata.pkl
+
+# Editor
+.vscode/

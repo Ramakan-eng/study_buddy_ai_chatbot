@@ -1,0 +1,226 @@
+############# RETRIEVER CHECK
+
+from chat.rag.retriever import retrieve_case_chunks
+
+chunks = retrieve_case_chunks(
+    query="what is the citation of this case",
+    case_id='Smith v. Roe'
+)
+
+len(chunks)
+chunks[0]["text"][:300]
+
+
+
+
+
+
+kyle_pavan_v_state_of_indiana
+
+
+
+
+
+######################
+
+from chat.rag.retriever import retrieve_case_chunks
+
+chunks = retrieve_case_chunks(
+    query="what is the citation  and issue of this case",
+    case_id='Kyle Pavan v. State of Indiana'
+)
+
+len(chunks)
+chunks
+
+
+
+
+
+
+
+
+
+
+
+
+
+for c in results["metadatas"]:
+     if c=='case_id':
+        print(True)
+                        
+
+
+#################### PROMPT CHECK
+
+from chat.rag.prompt import build_case_prompt
+from chat.rag.retriever import retrieve_case_chunks
+
+chunks = retrieve_case_chunks("what is the issue", "Smith v. Roe")
+prompt = build_case_prompt("What is the issue in this case?", chunks)
+
+print(prompt[:1500])
+
+
+
+
+##################  generator check
+
+
+from chat.rag.generator import generate_answer
+from chat.rag.prompt import build_case_prompt
+from chat.rag.retriever import retrieve_case_chunks
+
+chunks = retrieve_case_chunks("what is the issue", "Smith v. Roe")
+prompt = build_case_prompt("What is the issue in this case?", chunks)
+
+answer = generate_answer(prompt)
+print(answer)
+
+
+#######################  SEFETY CHECK
+
+from chat.rag.safety import validate_answer
+
+is_valid, result = validate_answer(answer, chunks)
+print(is_valid, result)
+
+
+ *****  ################## FOR CASE SERACH
+
+  
+
+from chat.chroma_store import collection
+
+results = collection.query(
+    query_texts=["privacy"],
+    n_results=3,
+    where={"case_id": "wade_v_towers_partners,_llc"}
+)
+
+len(results["documents"][0])
+
+
+
+
+
+results = collection.query(
+    query_texts=["privacy"],
+    n_results=3,
+    where={"case_id":'Roe v. Wade'}
+)
+
+len(results["documents"][0])
+
+
+  
+
+
+results = collection.query(
+    query_texts=["privacy"],
+    n_results=3,
+    where={"case_id": 'Smith v. Roe'}
+)
+len(results["documents"][0])
+ 
+
+
+case_id = normalize_case_id("Jackson v. Roe")
+results = collection.query(
+    query_texts=["privacy"],
+    n_results=3,
+    where={"case_id": case_id}
+)
+
+
+
+results = collection.query(
+    query_texts=["privacy"],
+    n_results=3,
+    where={"case_id": "jackson_v_roe"}
+)
+
+results = collection.query(
+    query_texts=["privacy"],
+    n_results=3,
+    where={"case_id": "Vivek Sharma v. State"}
+)
+
+
+
+
+
+from chat.chroma_store import collection
+
+results = collection.query(
+    query_texts=["privacy"],
+    n_results=3,
+    where={"case_name": "Wade v. Towers Partners, L.L.C."}
+)
+
+len(results["documents"][0])
+
+
+
+
+
+results = collection.query(
+    query_texts=["privacy"],
+    n_results=3,
+    where={"citation_key": "314 F. Supp. 1217"}
+)
+
+len(results["documents"][0])
+
+
+
+
+where={"citation_key": "314 f. supp. 1217"}
+
+##########
+
+FOR CASE_IDS 
+
+
+metas = collection.get(include=["metadatas"])["metadatas"]
+
+unique_cases = sorted({m["case_id"] for m in metas})
+unique_cases
+
+
+
+
+
+
+
+['kyle_pavan_v_state_of_indiana', 'roe_v_wade', 'smith_v_pavan', 'us_v_brad_smith', 'wade_v_towers_partners,_llc']
+
+
+from chat.chroma_store import collection 
+
+
+
+Best-performing queries (use these)
+
+“What was the outcome of this case?”
+
+“What did the court decide in this case?”
+
+“Was the petition granted or denied?”
+
+“What procedural action did the court take?”
+
+“What relief was granted by the court?”
+
+“How did the appellate court dispose of the petition?”
+
+
+
+collection.count(where={"case_id": "Wadsworth v. Sharma"})
+
+
+
+
+
+
+git clone https://github.com/Ramakan-eng/legal_study_bot.git
