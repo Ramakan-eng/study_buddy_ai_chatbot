@@ -21,5 +21,5 @@ def generate_answer(prompt: str):
         ],
         temperature=0.0  # IMPORTANT: no creativity
     )
-
+    # print(response.choices[0].message.content.strip())
     return response.choices[0].message.content.strip()

@@ -6,7 +6,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
 from chat.chroma_store import collection, store_case_in_chroma,normalize_case_id
-from chat.rag import retrieve_case_chunks, build_case_prompt, generate_answer, validate_answer
+#build_case_promp,build_prompt,classify_query,
+from chat.rag.prompt import build_case_prompt
+from chat.rag import retrieve_case_chunks, generate_answer, validate_answer,detect_intent 
 from chat.memory import get_summary, update_summary
 from chat.models import ConversationSummary
 
@@ -15,6 +17,7 @@ from chat.models import ConversationSummary
 
 COURTLISTENER_BASE = "https://www.courtlistener.com/api/rest/v4"
 _TOKEN = os.environ.get("COURTLISTENER_TOKEN") or getattr(settings, "COURTLISTENER_TOKEN", "")
+_TOKEN =  "8801d9c790ffe652460d0a24d6bd41b22ffa19b0"
 HEADERS = {"Authorization": f"Token {_TOKEN}"} if _TOKEN else {}
 
 # Helpers
@@ -40,7 +43,7 @@ def  case_exists_in_chroma(case_id: str) -> bool:
                 )
         return len(results.get("documents", [[]])[0]) > 0
     except Exception:
-        return True
+        return False
 
 
 def fetch_case_from_courtlistener(case_name: str, citation: str | None):
@@ -138,7 +141,7 @@ def ask_case(request):
     query = request.GET.get("query") or request.POST.get("query")
     citation = request.GET.get("citation") or request.POST.get("citation")
     session_id = request.GET.get("session_id", "default_session")
-
+    print(case_id, query, citation, session_id)
     if not case_id:
         return JsonResponse({"error": "case_id is required"}, status=400)
 
@@ -151,63 +154,67 @@ def ask_case(request):
             status=500
         )
 
+    intent = detect_intent(query)
+    if intent == 0:
+        # return JsonResponse({"answer": "This question is currently not supported in StudyBuddyPro Phase 1."})
+        ans = "This question is currently not supported in StudyBuddyPro Phase 1."
+        safe_answer = generate_answer(ans)
+        return JsonResponse({
+            "case_id": case_id,
+            "answer": safe_answer})
+    else:
+
+        print("Intent detected as supported question.")
  #   DB FIRST
-    
-    if not case_exists_in_chroma(case_id):
-        case_data, error = fetch_case_from_courtlistener(case_id, citation)
 
-        if error:
-            return JsonResponse({"error": error}, status=404)
+        if not case_exists_in_chroma(case_id):
+            case_data, error = fetch_case_from_courtlistener(case_id, citation)
 
-        try:
-            store_case_in_chroma(case_data)
-        except Exception as e:
+            if error:
+                return JsonResponse({"error": error}, status=404)
+
+            try:
+                store_case_in_chroma(case_data)
+            except Exception as e:
+                return JsonResponse(
+                    {"error": "Failed to store case in vector DB", "detail": str(e)},
+                    status=500
+                )
+
+            source = "courtlistener_then_vector_db"
+        else:
+            source = "vector_db"
+
+
+        #  RAG
+        chunks = retrieve_case_chunks(query, case_id)
+
+        if not chunks:
             return JsonResponse(
-                {"error": "Failed to store case in vector DB", "detail": str(e)},
-                status=500
+                {"error": "No relevant content found for this case"},
+                status=404
             )
 
-        source = "courtlistener_then_vector_db"
-    else:
-        source = "vector_db"
 
-   #  RAG
-    
-    chunks = retrieve_case_chunks(query, case_id)
-
-    if not chunks:
-        return JsonResponse(
-            {"error": "No relevant content found for this case"},
-            status=404
-        )
-
-    summary = get_summary(session_id, case_id)
-    prompt = build_case_prompt(query, chunks, summary)
-    # answer = generate_answer(prompt)
-
-    # prompt = build_case_prompt(query, chunks)
-    answer = generate_answer(prompt)
-
-    ok, safe_answer = validate_answer(answer, chunks)
-    if not ok:
-        return JsonResponse(
-            {"error": "Answer failed safety checks", "detail": safe_answer},
-            status=422
-        )
+ 
+        prompt = build_case_prompt(query, chunks)
+        # prompt = build_prompt(category, query, chunks)
+        # print("Generated prompt:", prompt)
+        answer = generate_answer(prompt)
 
 
-    summary_update = f"""
-    User: {query}
-    Assistant: {safe_answer}
-    """
-    update_summary(session_id, case_id, summary_update)
+        ok, safe_answer = validate_answer(answer, chunks)
+        if not ok:
+            return JsonResponse(
+                {"error": "Answer failed safety checks", "detail": safe_answer},
+                status=422
+            )
 
 
-
-    return JsonResponse({
-        "case_id": case_id,
-        "question": query,
-        "answer": safe_answer,
-        "chunks_used": len(chunks),
-        "source": source
-    })
+        return JsonResponse({
+            "case_id": case_id,
+            "question": query,
+            "answer": safe_answer,
+            # "chunks_used": len(chunks),
+            "source": source
+        })

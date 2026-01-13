@@ -30,7 +30,8 @@ torch>=2.0.0
 # LLM (if using OpenAI / Claude later)
 # ---------------------------
 openai>=1.6.0
-
+langchain-text-splitters
+langchain-core
 # ---------------------------
 # Text Processing
 # ---------------------------
