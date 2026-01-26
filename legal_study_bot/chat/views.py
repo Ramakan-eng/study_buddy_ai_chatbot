@@ -1,4 +1,5 @@
 import os
+from urllib import response
 import requests
 from bs4 import BeautifulSoup
 from django.http import JsonResponse
@@ -9,6 +10,7 @@ from chat.chroma_store import collection, store_case_in_chroma,normalize_case_id
 #build_case_promp,build_prompt,classify_query,
 from chat.rag.prompt import build_case_prompt
 from chat.rag import retrieve_case_chunks, generate_answer, validate_answer,detect_intent 
+from chat.cache_memory.in_memory import InMemoryCache
 from chat.memory import get_summary, update_summary
 from chat.models import ConversationSummary
 
@@ -122,7 +124,7 @@ def fetch_case_from_courtlistener(case_name: str, citation: str | None):
 
 
 # MAIN ENDPOINT (DB FIRST)
-
+cache = InMemoryCache()
 
 @csrf_exempt
 def ask_case(request):
@@ -141,7 +143,7 @@ def ask_case(request):
     query = request.GET.get("query") or request.POST.get("query")
     citation = request.GET.get("citation") or request.POST.get("citation")
     session_id = request.GET.get("session_id", "default_session")
-    print(case_id, query, citation, session_id)
+    # print(case_id, query, citation, session_id)
     if not case_id:
         return JsonResponse({"error": "case_id is required"}, status=400)
 
@@ -153,6 +155,25 @@ def ask_case(request):
             {"error": "CourtListener token not configured"},
             status=500
         )
+# Cache memory check logic 
+    
+
+    cached_response = cache.get_cached_response(case_id, query)
+    if cached_response:
+        return JsonResponse({
+            "case_id": case_id,
+            "answer": cached_response,
+            "source": "cache"
+        })
+
+
+
+
+
+
+
+
+
 
     intent = detect_intent(query)
     if intent == 0:
@@ -164,7 +185,8 @@ def ask_case(request):
             "answer": safe_answer})
     else:
 
-        print("Intent detected as supported question.")
+        # print("Intent detected as supported question.")
+
  #   DB FIRST
 
         if not case_exists_in_chroma(case_id):
@@ -200,6 +222,7 @@ def ask_case(request):
         prompt = build_case_prompt(query, chunks)
         # prompt = build_prompt(category, query, chunks)
         # print("Generated prompt:", prompt)
+        
         answer = generate_answer(prompt)
 
 
@@ -209,6 +232,10 @@ def ask_case(request):
                 {"error": "Answer failed safety checks", "detail": safe_answer},
                 status=422
             )
+
+        cache.store_cache(case_id, query, safe_answer)
+        
+            
 
 
         return JsonResponse({
