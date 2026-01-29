@@ -15,6 +15,7 @@ from chat.cache_memory.sql_cache import cache_response, store_in_sql_cache
 # from chat.memory import get_summary, update_summary
 # from chat.models import ConversationSummary
 from chat.models import CachedResponse
+from chat.cache_memory.semantic import SemanticCache
 
 # CourtListener setup
 
@@ -127,7 +128,7 @@ def fetch_case_from_courtlistener(case_name: str, citation: str | None):
 
 # MAIN ENDPOINT (DB FIRST)
 cache = InMemoryCache()
-
+sem_cache = SemanticCache()
 @csrf_exempt
 def ask_case(request):
     """
@@ -160,35 +161,35 @@ def ask_case(request):
 # Cache memory check logic 
     
 # IN _MEMORY CACHE FIRST
-    cached_response = cache.get_cached_response(case_id, query)
-    if cached_response:
-        return JsonResponse({
-            "case_id": case_id,
-            "answer": cached_response,
-            "source": "cache"
-        })
+    # cached_response = cache.get_cached_response(case_id, query)
+    # if cached_response:
+    #     return JsonResponse({
+    #         "case_id": case_id,
+    #         "answer": cached_response,
+    #         "source": "cache"
+    #     })
 
   # SQL CACHE NEXT  
     
-    answer = cache_response(case_id, query)
-    if answer:
-        return JsonResponse({   
-            "case_id": case_id,
-            "answer": answer,
-            "source": "sql_cache"
-        })
+    # answer = cache_response(case_id, query)
+    # if answer:
+    #     return JsonResponse({   
+    #         "case_id": case_id,
+    #         "answer": answer,
+    #         "source": "sql_cache"
+    #     })
 
 
 # SEMANTIC CACHE  
 
-    # semantic_answer = cache.get_semantic_cache(case_id, query)
-    # if semantic_answer:
-    #     return JsonResponse({
-    #         "case_id": case_id,
-    #         "answer": semantic_answer,
-    #         "source": "semantic_cache"
-    #     })
-    
+    answer = sem_cache.semantic_cache_response(case_id, query)             
+    if answer:
+        return JsonResponse({   
+            "case_id": case_id,
+            "query": query,
+            "answer": answer,
+            "source": "semantic_cache"
+        })
 
     
     
@@ -255,11 +256,14 @@ def ask_case(request):
                 status=422
             )
 
+# STORE IN IN-MEMORY CACHE
         cache.store_cache(case_id, query, safe_answer)
 
+# STORE IN sqlite CACHE
         store_in_sql_cache(case_id, query, safe_answer)
         
-            
+# STORE IN SEMANTIC CACHE
+        sem_cache.store_in_semantic_cache(case_id, query, safe_answer)
 
 
         return JsonResponse({
