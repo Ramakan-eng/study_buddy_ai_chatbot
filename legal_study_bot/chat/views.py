@@ -11,8 +11,10 @@ from chat.chroma_store import collection, store_case_in_chroma,normalize_case_id
 from chat.rag.prompt import build_case_prompt
 from chat.rag import retrieve_case_chunks, generate_answer, validate_answer,detect_intent 
 from chat.cache_memory.in_memory import InMemoryCache
-from chat.memory import get_summary, update_summary
-from chat.models import ConversationSummary
+from chat.cache_memory.sql_cache import cache_response, store_in_sql_cache
+# from chat.memory import get_summary, update_summary
+# from chat.models import ConversationSummary
+from chat.models import CachedResponse
 
 # CourtListener setup
 
@@ -157,7 +159,7 @@ def ask_case(request):
         )
 # Cache memory check logic 
     
-
+# IN _MEMORY CACHE FIRST
     cached_response = cache.get_cached_response(case_id, query)
     if cached_response:
         return JsonResponse({
@@ -166,13 +168,33 @@ def ask_case(request):
             "source": "cache"
         })
 
+  # SQL CACHE NEXT  
+    
+    answer = cache_response(case_id, query)
+    if answer:
+        return JsonResponse({   
+            "case_id": case_id,
+            "answer": answer,
+            "source": "sql_cache"
+        })
 
 
+# SEMANTIC CACHE  
 
+    # semantic_answer = cache.get_semantic_cache(case_id, query)
+    # if semantic_answer:
+    #     return JsonResponse({
+    #         "case_id": case_id,
+    #         "answer": semantic_answer,
+    #         "source": "semantic_cache"
+    #     })
+    
 
-
-
-
+    
+    
+    
+    
+    # INtent DETECTION OF SUPPORTED QUESTIONS
 
 
     intent = detect_intent(query)
@@ -234,6 +256,8 @@ def ask_case(request):
             )
 
         cache.store_cache(case_id, query, safe_answer)
+
+        store_in_sql_cache(case_id, query, safe_answer)
         
             
 
