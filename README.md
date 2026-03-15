@@ -1,4 +1,4 @@
-StudyBuddy Legal RAG Chatbot
+## StudyBuddy Legal RAG Chatbot
 Overview
 
 This project is a Legal Retrieval-Augmented Generation (RAG) system designed to answer questions about judicial cases using primary legal sources. The system retrieves case law from the CourtListener API, stores it in a vector database, and uses a controlled LLM pipeline to generate grounded answers.
