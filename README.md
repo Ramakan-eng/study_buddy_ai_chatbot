@@ -1,60 +1,93 @@
-## StudyBuddy Legal RAG Chatbot
+Nice, you’re thinking the right way for GitHub formatting 👍
+Below is your clean, correctly structured README using H1, H2, H3 headings and bold text (**bold**) exactly the way GitHub Markdown expects.
+
+You can paste this directly into your GitHub README.md.
+
+Legal RAG Chatbot
 Overview
-CourtListener Integration
-This project is a Legal Retrieval-Augmented Generation (RAG) system designed to answer questions about judicial cases using primary legal sources. The system retrieves case law from the CourtListener API, stores it in a vector database, and uses a controlled LLM pipeline to generate grounded answers.
 
-The goal of the project is to build a system that answers case-specific questions while minimizing hallucination and ensuring that answers are derived only from the retrieved legal documents.
+Legal RAG Chatbot is a Retrieval-Augmented Generation (RAG) system designed to answer questions about judicial cases using primary legal sources.
 
-The system follows a DB-first retrieval strategy, meaning the application always checks the local vector database before fetching data from external sources.
+The system retrieves case law from the CourtListener API, stores it in a vector database, and uses a controlled LLM pipeline to generate grounded answers.
 
-This project was developed as part of an AI/ML internship and focuses on building a production-oriented pipeline rather than a prototype chatbot.
+The goal of this project is to build a system that answers case-specific legal questions while minimizing hallucination, ensuring responses are derived only from retrieved legal documents.
+
+The application follows a DB-first retrieval strategy, meaning the system always checks the local vector database before fetching data from external sources.
+
+This project was developed as part of an AI/ML internship and focuses on building a production-oriented RAG pipeline.
 
 Core Features
 Legal RAG Pipeline
 
-Implements a Retrieval-Augmented Generation workflow where answers are generated using retrieved case law documents instead of relying solely on LLM knowledge.
+Implements a Retrieval-Augmented Generation workflow where answers are generated using retrieved legal case documents instead of relying solely on the LLM’s internal knowledge.
 
 DB-First Retrieval Strategy
 
-The system first checks whether the requested case already exists in the vector database. If it exists, retrieval happens locally. If not, the case is fetched from CourtListener and stored.
+The system first checks whether the requested case exists in the vector database.
+
+If available → retrieval happens locally
+
+If not available → the case is fetched from the CourtListener API and stored
 
 CourtListener Integration
 
-The application integrates with the CourtListener API to retrieve real judicial opinions, citations, judges, and metadata.
+The system integrates with the CourtListener API to retrieve:
+
+judicial opinions
+
+case citations
+
+judge information
+
+legal metadata
 
 Semantic Search
 
-Case opinions are chunked and stored in ChromaDB with embeddings. Queries are matched against these embeddings to retrieve the most relevant parts of a case.
+Legal case opinions are chunked and stored in ChromaDB using embeddings.
+
+User queries are matched against embeddings to retrieve the most relevant sections of a legal case.
 
 Query Classification
 
-The system restricts queries to supported categories such as:
+The system restricts queries to supported legal categories.
 
-Case brief
+Supported Query Types
 
-Rule of law
+Case Brief
 
-Legal issue
+Rule of Law
 
-Case summary
+Legal Issue
 
-Majority reasoning
+Case Summary
 
-Unsupported queries such as cross-case comparisons or hypothetical questions are rejected.
+Majority Reasoning
+
+Queries such as cross-case comparisons or hypothetical legal scenarios are rejected.
 
 Deterministic Response via Caching
 
-To ensure consistent answers for repeated queries, the system implements an in-memory LRU cache. If the same case and question are asked again, the stored answer is returned without calling the LLM.
+To ensure consistent responses, the system implements an in-memory LRU cache.
+
+If the same case + question is asked again, the cached answer is returned without calling the LLM again.
 
 Safety Validation
 
-Generated responses are validated against retrieved chunks to ensure answers remain grounded in the source material.
+Generated responses are validated against retrieved document chunks to ensure answers remain grounded in the original legal sources.
 
 System Architecture
 
-The application follows a modular architecture separating retrieval, prompting, generation, and safety validation.
+The system follows a modular architecture separating:
 
-High-level workflow:
+retrieval
+
+prompting
+
+answer generation
+
+safety validation
+
+High-Level Workflow
 
 User submits a case question
 
@@ -64,7 +97,7 @@ System checks in-memory cache
 
 System checks vector database
 
-If case not found, fetch from CourtListener
+If case not found → fetch from CourtListener API
 
 Store case data in ChromaDB
 
@@ -78,9 +111,10 @@ Validate response
 
 Store response in cache
 
-Return answer to user
+Return final answer
 
 User Flow
+Request Pipeline
 
 User Request
 → Django API Endpoint
@@ -97,22 +131,22 @@ User Request
 
 Project Structure
 legal_study_bot/
-│
+
 ├── chat/
 │   ├── views.py
 │   ├── urls.py
 │   ├── chroma_store.py
-│   │
+│
 │   ├── rag/
 │   │   ├── retriever.py
 │   │   ├── prompt.py
 │   │   ├── generator.py
 │   │   └── safety.py
-│   │
+│
 │   ├── memory/
 │   │   ├── in_memory_cache.py
 │   │   └── memory.py
-│   │
+│
 │   ├── models.py
 │   └── utils/
 │
@@ -124,23 +158,33 @@ legal_study_bot/
 Key Components
 views.py
 
-Handles API requests and orchestrates the pipeline including caching, retrieval, and generation.
+Handles API requests and orchestrates the pipeline including:
+
+caching
+
+retrieval
+
+response generation
 
 chroma_store.py
 
-Responsible for storing case data in the vector database. This includes chunking judicial opinions and attaching metadata.
+Responsible for storing case data in the vector database, including:
+
+chunking judicial opinions
+
+attaching metadata
 
 retriever.py
 
-Handles semantic search queries against ChromaDB using case filters and embedding similarity.
+Handles semantic search queries against ChromaDB using embedding similarity.
 
 prompt.py
 
-Defines prompt templates used to structure LLM input for different query categories.
+Defines prompt templates used to structure LLM input for different legal query categories.
 
 generator.py
 
-Handles interaction with the language model.
+Handles interaction with the language model and generates the final response.
 
 safety.py
 
@@ -152,19 +196,19 @@ Implements an LRU cache to store previously generated answers for repeated queri
 
 Data Processing Pipeline
 
-When a case is fetched from CourtListener:
+When a case is fetched from CourtListener API:
 
 Case metadata is extracted
 
-Judicial opinions are cleaned and converted to text
+Judicial opinions are cleaned
 
-Text is split into chunks using recursive text splitting
+Text is split into smaller chunks
 
-Each chunk is embedded
+Embeddings are generated
 
 Embeddings are stored in ChromaDB with metadata
 
-Metadata stored with each chunk includes:
+Metadata Stored with Each Chunk
 
 case_name
 
@@ -184,33 +228,31 @@ When a user asks a question:
 
 System validates the query category
 
-Cache is checked for identical (case_id + query)
+Cache is checked for (case_id + query)
 
-If cached, response is returned immediately
+If cached → response returned immediately
 
 If not cached:
 
 retrieve relevant chunks from ChromaDB
 
-if case missing, fetch from CourtListener
+if case missing → fetch from CourtListener
 
 generate answer using retrieved context
 
-Store answer in cache for future requests
+store answer in cache
 
 Caching Strategy
 
-The system uses an in-memory LRU cache to ensure deterministic responses.
+The system uses an in-memory LRU cache.
 
-Cache key format:
-
+Cache Key Format
 case_id + query
-
-Benefits:
+Benefits
 
 Prevents repeated LLM calls
 
-Reduces latency
+Reduces response latency
 
 Ensures consistent answers
 
@@ -218,14 +260,11 @@ Controls memory usage with LRU eviction
 
 Example API Request
 GET /chat/ask/question/
-
-Parameters:
+Parameters
 case_id = Roe v. Wade
 citation = 410 U.S. 113
 query = what was the legal issue in this case
-
-Example response:
-
+Example Response
 {
   "case_id": "Roe v. Wade",
   "question": "what was the legal issue in this case",
@@ -249,293 +288,24 @@ REST APIs
 
 Vector Databases
 
-Retrieval Augmented Generation
-
-Prompt Engineering
-
-Motivation
-StudyBuddy Legal RAG Chatbot
-Overview
-
-This project is a Legal Retrieval-Augmented Generation (RAG) system designed to answer questions about judicial cases using primary legal sources. The system retrieves case law from the CourtListener API, stores it in a vector database, and uses a controlled LLM pipeline to generate grounded answers.
-
-The goal of the project is to build a system that answers case-specific questions while minimizing hallucination and ensuring that answers are derived only from the retrieved legal documents.
-
-The system follows a DB-first retrieval strategy, meaning the application always checks the local vector database before fetching data from external sources.
-
-This project was developed as part of an AI/ML internship and focuses on building a production-oriented pipeline rather than a prototype chatbot.
-
-Core Features
-Legal RAG Pipeline
-
-Implements a Retrieval-Augmented Generation workflow where answers are generated using retrieved case law documents instead of relying solely on LLM knowledge.
-
-DB-First Retrieval Strategy
-
-The system first checks whether the requested case already exists in the vector database. If it exists, retrieval happens locally. If not, the case is fetched from CourtListener and stored.
-
-CourtListener Integration
-
-The application integrates with the CourtListener API to retrieve real judicial opinions, citations, judges, and metadata.
-
-Semantic Search
-
-Case opinions are chunked and stored in ChromaDB with embeddings. Queries are matched against these embeddings to retrieve the most relevant parts of a case.
-
-Query Classification
-
-The system restricts queries to supported categories such as:
-
-Case brief
-
-Rule of law
-
-Legal issue
-
-Case summary
-
-Majority reasoning
-
-Unsupported queries such as cross-case comparisons or hypothetical questions are rejected.
-
-Deterministic Response via Caching
-
-To ensure consistent answers for repeated queries, the system implements an in-memory LRU cache. If the same case and question are asked again, the stored answer is returned without calling the LLM.
-
-Safety Validation
-
-Generated responses are validated against retrieved chunks to ensure answers remain grounded in the source material.
-
-System Architecture
-
-The application follows a modular architecture separating retrieval, prompting, generation, and safety validation.
-
-High-level workflow:
-
-User submits a case question
-
-Query classification validates the request
-
-System checks in-memory cache
-
-System checks vector database
-
-If case not found, fetch from CourtListener
-
-Store case data in ChromaDB
-
-Retrieve relevant chunks
-
-Build prompt for LLM
-
-Generate answer
-
-Validate response
-
-Store response in cache
-
-Return answer to user
-
-User Flow
-
-User Request
-→ Django API Endpoint
-→ Query Classification
-→ Cache Check
-→ Vector Database Retrieval
-→ CourtListener Fetch (if needed)
-→ Chunking and Embedding
-→ RAG Pipeline
-→ LLM Generation
-→ Safety Validation
-→ Cache Storage
-→ Final Response
-
-Project Structure
-legal_study_bot/
-│
-├── chat/
-│   ├── views.py
-│   ├── urls.py
-│   ├── chroma_store.py
-│   │
-│   ├── rag/
-│   │   ├── retriever.py
-│   │   ├── prompt.py
-│   │   ├── generator.py
-│   │   └── safety.py
-│   │
-│   ├── memory/
-│   │   ├── in_memory_cache.py
-│   │   └── memory.py
-│   │
-│   ├── models.py
-│   └── utils/
-│
-├── chroma_db/
-│
-├── manage.py
-├── requirements.txt
-└── README.md
-Key Components
-views.py
-
-Handles API requests and orchestrates the pipeline including caching, retrieval, and generation.
-
-chroma_store.py
-
-Responsible for storing case data in the vector database. This includes chunking judicial opinions and attaching metadata.
-
-retriever.py
-
-Handles semantic search queries against ChromaDB using case filters and embedding similarity.
-
-prompt.py
-
-Defines prompt templates used to structure LLM input for different query categories.
-
-generator.py
-
-Handles interaction with the language model.
-
-safety.py
-
-Validates generated responses to ensure they remain grounded in retrieved legal content.
-
-in_memory_cache.py
-
-Implements an LRU cache to store previously generated answers for repeated queries.
-
-Data Processing Pipeline
-
-When a case is fetched from CourtListener:
-
-Case metadata is extracted
-
-Judicial opinions are cleaned and converted to text
-
-Text is split into chunks using recursive text splitting
-
-Each chunk is embedded
-
-Embeddings are stored in ChromaDB with metadata
-
-Metadata stored with each chunk includes:
-
-case_name
-
-case_id
-
-citation_key
-
-opinion_type
-
-author
-
-chunk_index
-
-Query Processing
-
-When a user asks a question:
-
-System validates the query category
-
-Cache is checked for identical (case_id + query)
-
-If cached, response is returned immediately
-
-If not cached:
-
-retrieve relevant chunks from ChromaDB
-
-if case missing, fetch from CourtListener
-
-generate answer using retrieved context
-
-Store answer in cache for future requests
-
-Caching Strategy
-
-The system uses an in-memory LRU cache to ensure deterministic responses.
-
-Cache key format:
-
-case_id + query
-
-Benefits:
-
-Prevents repeated LLM calls
-
-Reduces latency
-
-Ensures consistent answers
-
-Controls memory usage with LRU eviction
-
-Example API Request
-GET /chat/ask/question/
-
-Parameters:
-case_id = Roe v. Wade
-citation = 410 U.S. 113
-query = what was the legal issue in this case
-
-Example response:
-
-{
-  "case_id": "Roe v. Wade",
-  "question": "what was the legal issue in this case",
-  "answer": "...",
-  "chunks_used": 4,
-  "source": "vector_db"
-}
-Technologies Used
-
-Python
-
-Django
-
-ChromaDB
-
-SentenceTransformers
-
-CourtListener API
-
-REST APIs
-
-Vector Databases
-
-Retrieval Augmented Generation
+Retrieval Augmented Generation (RAG)
 
 Prompt Engineering
 
 Running the Project
-
-Clone the repository
-
+Clone the Repository
 git clone <repo_url>
 cd legal_study_bot
-
-Create virtual environment
-
+Create Virtual Environment
 python -m venv venv
-
-Activate environment
-
+Activate Environment
 Linux / Mac
-
 source venv/bin/activate
-
 Windows
-
 venv\Scripts\activate
-
-Install dependencies
-
+Install Dependencies
 pip install -r requirements.txt
-
-Run Django server
-
+Run the Server
 python manage.py runserver
 Environment Variables
 
@@ -547,15 +317,15 @@ Future Improvements
 
 Possible improvements for the system include:
 
-Redis based distributed caching
+Redis-based distributed caching
 
-Streaming responses for large answers
+Streaming responses for long answers
 
 Case comparison support
 
 Multi-case reasoning
 
-Deployment with Docker and Gunicorn
+Docker deployment
 
 Persistent memory storage
 
@@ -563,10 +333,8 @@ Query intent classification using ML
 
 Motivation
 
-Legal documents are long and difficult to navigate. The goal of this project was to design a system that allows users to ask natural language questions about cases while ensuring answers remain grounded in the original judicial opinions.
+Legal documents are long and complex, making them difficult to analyze quickly.
 
-Instead of relying purely on language models, the system prioritizes document retrieval and structured reasoning.
+This project aims to allow users to ask natural language questions about judicial cases while ensuring responses remain accurate and grounded in real legal sources.
 
-Legal documents are long and difficult to navigate. The goal of this project was to design a system that allows users to ask natural language questions about cases while ensuring answers remain grounded in the original judicial opinions.
-
-Instead of relying purely on language models, the system prioritizes document retrieval and structured reasoning.
+Instead of relying purely on LLM knowledge, the system prioritizes document retrieval and structured reasoning.
