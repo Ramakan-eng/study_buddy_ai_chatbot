@@ -1,6 +1,6 @@
 ## StudyBuddy Legal RAG Chatbot
 Overview
-
+CourtListener Integration
 This project is a Legal Retrieval-Augmented Generation (RAG) system designed to answer questions about judicial cases using primary legal sources. The system retrieves case law from the CourtListener API, stores it in a vector database, and uses a controlled LLM pipeline to generate grounded answers.
 
 The goal of the project is to build a system that answers case-specific questions while minimizing hallucination and ensuring that answers are derived only from the retrieved legal documents.
